@@ -1,0 +1,13 @@
+_unsloth_sentencepiece_temp/
+questions/
+answers/
+Benchmarks/
+Fine_tuning_data/
+LLMs/
+logs/
+log/
+Evaluation.ipynb
+grade-school-math.csv
+start.ipynb
+Working_script_for_training.ipynb
+**/__pycache__/
