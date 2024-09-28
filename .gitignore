@@ -11,3 +11,6 @@ grade-school-math.csv
 start.ipynb
 Working_script_for_training.ipynb
 **/__pycache__/
+Answers_finetuning_dataset/
+Trash/
+output/

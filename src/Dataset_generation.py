@@ -70,13 +70,13 @@ def generate_full_question(model,tokenizer):
         'question': question
     }
 
-def save_question_and_log(question_data, subtopic_prompt, question_prompt):
+def save_question_and_log(question_data, subtopic_prompt, question_prompt,folder="Dataset_creation/questions"):
     timestamp = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     filename = f"sample_{timestamp}_{question_data['main_topic'].replace(' ', '_')}.txt"
     
     # Save question
-    os.makedirs('questions', exist_ok=True)
-    with open(os.path.join('questions', filename), 'w') as file:
+    os.makedirs(folder, exist_ok=True)
+    with open(os.path.join(folder, filename), 'w') as file:
         file.write(question_data['question'])
     
     # Save log

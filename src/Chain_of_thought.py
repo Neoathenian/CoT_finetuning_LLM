@@ -1,5 +1,8 @@
+import re
+
 from src.Basic_LLM_functions import LLM_conection
 #If you want anything here to run, you must connect to LLM_conection a model&tokenizer or modify it for api use
+from src.Logger import logger, set_logging_level
 
 
 
@@ -41,22 +44,11 @@ def simplify_reasoning(steps):
     """
     simplified_steps_text = LLM_conection.Get_answer(prompt)
 
-    # Parse the simplified steps based on the '## Step n' separator
-    simplified_steps = []
-    lines = simplified_steps_text.strip().split('\n')
-    current_step = ''
+    # Split the simplified steps based on the '## Step' separator using regex
+    simplified_steps = re.split(r'## Step \d+', simplified_steps_text)
     
-    for line in lines:
-        line = line.strip()
-        if line.startswith("## Step"):
-            if current_step:
-                simplified_steps.append(current_step.strip())
-            current_step = line.split(' ', 2)[-1]  # Get the content after 'Step n'
-        else:
-            current_step += ' ' + line  # Continue appending to the current step text
-    
-    if current_step:
-        simplified_steps.append(current_step.strip())  # Add the last step
+    # Remove any leading or trailing whitespace from each step
+    simplified_steps = [step.strip() for step in simplified_steps if step.strip()]
     
     return simplified_steps
 
@@ -88,7 +80,9 @@ def verify_step(step,question, reasoning_steps):
     return LLM_conection.Get_answer(prompt)
 
 
-def Chain_of_thought(question, max_attempts=3):
+def Chain_of_thought(question, max_attempts=3, verbose=0):
+    set_logging_level(verbose)
+    
     attempt = 0
     success = False
     accumulated_correct_steps = []
@@ -97,23 +91,17 @@ def Chain_of_thought(question, max_attempts=3):
     while attempt < max_attempts and not success:
         attempt += 1
 
-        # Print attempt number and question
-        print("----------------------")
-        print(f"Attempt {attempt} for question: {question}")
+        # Log attempt number and question
+        logger.info(f"----------------------\nAttempt {attempt} for question: {question}")
 
         # Step 1: Think about the question (only in the first attempt)
         if attempt == 1:
             information = think_about_question(question)
-            # Print additional information
-            print("----------------------")
-            print("Additional information:")
-            print(information)
-        else:
-            # Use the same information from the first attempt
-            pass
+            logger.info(f"----------------------Additional information: {information}")
 
         # Step 2: Reason an answer given the question, information, and correct steps
         reasoning_and_answer = reason_answer(question, information, accumulated_correct_steps)
+        logger.debug(f"----------------------\nReasoning and answer: {reasoning_and_answer}")
 
         # Try to extract the answer from the reasoning
         if 'Answer:' in reasoning_and_answer:
@@ -121,13 +109,12 @@ def Chain_of_thought(question, max_attempts=3):
             reasoning = reasoning_part.strip()
             generated_answer = answer_part.strip()
         else:
-            # No 'Answer:' tag, proceed to generate answer from reasoning steps later
             reasoning = reasoning_and_answer.strip()
             generated_answer = None  # Set to None to indicate we need to generate it
 
+
         # Step 3: Divide reasoning into steps
         divided_reasoning = divide_reasoning(reasoning)
-        # Parse the divided reasoning steps
         steps = []
         for line in divided_reasoning.strip().split('\n'):
             line = line.strip()
@@ -139,18 +126,12 @@ def Chain_of_thought(question, max_attempts=3):
 
         # Step 4: Simplify reasoning steps
         simplified_steps = simplify_reasoning(steps)
-        # Print simplified reasoning steps
-        print("----------------------")
-        print("Simplified reasoning steps:")
-        for idx, step in enumerate(simplified_steps, start=1):
-            print(f"{idx}. {step}")
+        logger.info(f"----------------------\nSimplified steps: {simplified_steps}")
 
         # If answer is None, generate answer from simplified reasoning steps
         if generated_answer is None:
             generated_answer = generate_answer(question, simplified_steps)
-            # Print generated answer
-            print("----------------------")
-            print(f"Generated Answer:\n{generated_answer}")
+            logger.info(f"----------------------\nGenerated answer: {generated_answer}")
 
         # Step 5: Verify each simplified step
         all_steps_correct = True
@@ -160,34 +141,28 @@ def Chain_of_thought(question, max_attempts=3):
             if verification.lower().startswith('yes'):
                 verified_steps.append(step)
             else:
-                # If a step is incorrect, stop accumulating further steps
                 all_steps_correct = False
-                print(f"----------------------")
-                print(f"Step incorrect: {step}")
-                print(f"Verification: {verification}")
+                logger.warning(f"----------------------\nStep incorrect: {step}\nVerification: {verification}")
                 break  # Stop verifying further steps
 
         if all_steps_correct:
-            # All steps are correct; accept the answer
-            print("----------------------")
-            print(f"Question answered with verified reasoning.")
-            print(f"Answer: {generated_answer}")
+            logger.info("----------------------")
+            logger.info("Question answered with verified reasoning.")
+            logger.info(f"Answer: {generated_answer}")
             return {
                 "question": question,
                 "information": information,
-                "reasoning": reasoning,
                 "simplified_steps": simplified_steps,
                 "answer": generated_answer
             }
         else:
-            # Accumulate correct steps for the next attempt
             accumulated_correct_steps = verified_steps.copy()
-            print(f"Reasoning was not fully correct. Attempts remaining: {max_attempts - attempt}")
+            logger.info(f"Reasoning was not fully correct. Attempts remaining: {max_attempts - attempt}")
 
     return {
-                "question": question,
-                "information": "",
-                "reasoning": "",
-                "simplified_steps": "",
-                "answer": ""
-            }
+        "question": question,
+        "information": "",
+        "simplified_steps": "",
+        "answer": ""
+    }
+

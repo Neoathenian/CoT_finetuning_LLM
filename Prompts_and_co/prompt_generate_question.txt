@@ -1,15 +1,13 @@
-Hi, I am working on a data science project, and I must synthesize a realistic query based on the following values
+Hi, I am working on a data science project and need to create a puzzle based on the following values:
 
-- Main Topic: {main_topic}
-- Subtopic: {subtopic}
-- Difficulty: {difficulty}
-- Problem Type: {problem_type}
-- Conceptual Connector: {conceptual_connector}
+Main Topic: {main_topic}
+Subtopic: {subtopic}
+Difficulty: {difficulty}
+Problem Type: {problem_type}
+Conceptual Connector: {conceptual_connector}
+The puzzle must meet these three criteria:
 
-The query must meet these three criteria
-
-1. Is answerable without external resources
-2. Requires multiple reasoning steps
-3. Is suitable for {difficulty} level expertise
-
-The query can be as long as is needed to provide adequate context. It must also look like a realistic query from a human. Please output JUST the query.
+It should be answerable without external resources.
+It must require multiple reasoning steps to arrive at the solution.
+It should be suitable for {difficulty} level expertise.
+Make sure the puzzle is engaging and presents a challenge, resembling a question that someone might encounter in a real-world scenario. Please output only the puzzle.
